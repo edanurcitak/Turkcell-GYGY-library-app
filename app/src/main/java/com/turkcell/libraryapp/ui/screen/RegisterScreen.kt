@@ -45,7 +45,7 @@ fun RegisterScreen(
             }
 
             is AuthState.Success -> {
-                onNavigateToLogin() //Kayıt başarılıysa Login ekranına dön
+                onNavigateToLogin()
             }
 
             else -> {

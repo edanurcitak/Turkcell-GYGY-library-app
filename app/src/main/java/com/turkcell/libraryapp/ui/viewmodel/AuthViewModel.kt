@@ -110,7 +110,7 @@ class AuthViewModel : ViewModel()
             repository
                 .signUp(email, password, fullName, studentNo)
                 .onSuccess { result -> _authState.value = AuthState.Success("student") }
-                //Kayıt sırasında oluşacak hatalar için popup ekranları
+                //Kayıt sırasında oluşacak hatalar için pop-up ekranları
                 .onFailure { ex ->
                     val errorMessage = when {
                         ex.message?.contains("already registered", ignoreCase = true) == true -> "E-posta adresi zaten kullanımda."
