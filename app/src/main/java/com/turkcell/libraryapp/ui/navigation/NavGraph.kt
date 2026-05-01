@@ -2,11 +2,15 @@ package com.turkcell.libraryapp.ui.navigation
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.turkcell.libraryapp.ui.screen.BookDetailScreen
 import com.turkcell.libraryapp.ui.screen.HomeScreen
 import com.turkcell.libraryapp.ui.screen.LoginScreen
 import com.turkcell.libraryapp.ui.screen.RegisterScreen
@@ -57,7 +61,23 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             authViewModel
         ) }
         composable(Screen.Homepage.route) {
-            HomeScreen(authViewModel, bookViewModel)
+            HomeScreen(navController = navController, authViewModel = authViewModel, bookViewModel = bookViewModel)
+        }
+
+        composable(
+            route = "book_detail/{bookId}",
+            arguments = listOf(navArgument("bookId") { type = NavType.StringType })
+        ) { backStackEntry ->
+
+            val bookList = bookViewModel.books.collectAsState().value
+
+            val bookId = backStackEntry.arguments?.getString("bookId")
+
+            val selectedBook = bookList.find { it.id == bookId }
+
+            if (selectedBook != null) {
+                BookDetailScreen(book = selectedBook)
+            }
         }
     }
 }

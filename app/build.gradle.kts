@@ -62,11 +62,11 @@ dependencies {
     implementation(libs.ktor.client.android)
     implementation(libs.kotlinx.serialization.json)
 
-
-
     implementation(libs.supabase.bom)
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.auth)
+
+    implementation(libs.coil.compose)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
