@@ -5,12 +5,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -38,11 +40,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.turkcell.libraryapp.data.model.Book
@@ -76,7 +80,7 @@ fun HomeScreen(
                 var expanded by remember { mutableStateOf(false)}
                 var selectedCategory by remember { mutableStateOf("Tümü") }
 
-                val categories = listOf("Tümü", "Romantik", "Tarih", "Psikoloji", "Bilim Kurgu", "Fantastik")
+                val categories = listOf("Tümü", "Romantik", "Tarih", "Psikoloji", "Bilim", "Fantastik")
 
                 //Filtreleme
                 val filteredBooks = if (selectedCategory == "Tümü") {
@@ -156,19 +160,21 @@ fun BookCard(book: Book, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(220.dp)
+            .height(280.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             //Kitap kapağı
             AsyncImage(
                 model = book.imageUrl,
                 contentDescription = book.title,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp),
+                    .height(170.dp),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = R.drawable.placeholder_book),
                 error = painterResource(id = R.drawable.error_image)
@@ -176,13 +182,24 @@ fun BookCard(book: Book, onClick: () -> Unit) {
             //Kitap adı
             Text(
                 text = book.title,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .fillMaxWidth(),
                 style = MaterialTheme.typography.labelLarge,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            //Stok Durumu
+            val hasStock = book.avaiableCopies > 0
+            Text(
+                text = if (hasStock) "Mevcut Stok: ${book.avaiableCopies}" else "STOKTA YOK",
+                color = if (hasStock) Color(0xFF2E7D32) else Color.Red,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
             )
 
         }

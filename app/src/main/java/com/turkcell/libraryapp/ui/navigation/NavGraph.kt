@@ -76,7 +76,14 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
             val selectedBook = bookList.find { it.id == bookId }
 
             if (selectedBook != null) {
-                BookDetailScreen(book = selectedBook)
+                BookDetailScreen(
+                    book = selectedBook,
+                    bookViewModel = bookViewModel,
+                    onNavigateToBorrows = {
+                        // Daha sonra değiştireceğiz.
+                        println("Kiralamalarım sayfasına gidiliyor...")
+                    }
+                )
             }
         }
     }

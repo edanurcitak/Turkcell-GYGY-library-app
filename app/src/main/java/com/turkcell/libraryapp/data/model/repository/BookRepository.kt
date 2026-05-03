@@ -3,13 +3,14 @@ import android.app.DownloadManager.Query
 import com.turkcell.libraryapp.data.model.Book
 import com.turkcell.libraryapp.data.supabase.supabase
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Order
 
 class BookRepository {
 
     suspend fun getAllBooks(): Result<List<Book>> = runCatching {
-        supabase.postgrest["books"]
-            .select()
-            .decodeList<Book>()
+        supabase.postgrest["books"].select {
+            order("title", Order.ASCENDING)
+        }.decodeList<Book>()
     }
 
     suspend fun getBookById(id:String): Result<Book> = runCatching {

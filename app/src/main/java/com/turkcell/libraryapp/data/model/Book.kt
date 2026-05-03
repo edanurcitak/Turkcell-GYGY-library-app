@@ -15,3 +15,15 @@ data class Book (
     @SerialName("available_copies") val avaiableCopies: Int = 1,
     @SerialName("image_url") val imageUrl: String? = null //Kitap kapağı
 )
+
+@Serializable
+data class BorrowRequest (
+    @SerialName("user_id") val userId: String,
+    @SerialName("book_id") val bookId: String,
+    @SerialName("return_date") val returnDate: String
+)
+
+@Serializable
+data class StockUpdate(
+    @SerialName("available_copies") val avaiableCopies: Int
+)
