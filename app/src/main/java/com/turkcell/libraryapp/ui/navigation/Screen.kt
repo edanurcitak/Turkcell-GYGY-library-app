@@ -12,4 +12,8 @@ sealed class Screen(val route: String)// Sealed class çünkü uygulamanın sayf
     object Register : Screen("register")
     object Homepage : Screen("homepage")
     object Splash : Screen("splash")
+    object Borrow : Screen("borrow_screen")
+    object BookDetail : Screen("book_detail/{bookId}") {
+        fun createRoute(bookId: String) = "book_detail/$bookId"
+    }
 }

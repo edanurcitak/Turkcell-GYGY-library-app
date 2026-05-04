@@ -19,10 +19,19 @@ import com.turkcell.libraryapp.ui.viewmodel.BookViewModel
 
 @Composable
 fun BookDetailScreen(
-    book: Book,
+    bookId: String,
     bookViewModel: BookViewModel,
     onNavigateToBorrows: () -> Unit
 ) {
+    val book = bookViewModel.getBookById(bookId)
+
+    if (book == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator() // Yuvarlak yükleniyor animasyonu
+        }
+        return // Kodun aşağıya inmesini engelliyoruz
+    }
+
     var showDatePickerDialog by remember { mutableStateOf(false) }
     var showSuccessDialog by remember { mutableStateOf(false) }
 
@@ -58,22 +67,9 @@ fun BookDetailScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = "Yazar: ${book.author}",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            Text(
-                text = "Tür: ${book.category}",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            Text(
-                text = "Sayfa Sayısı: ${book.pageCount}",
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Text(text = "Yazar: ${book.author}", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
+            Text(text = "Tür: ${book.category}", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(bottom = 8.dp))
+            Text(text = "Sayfa Sayısı: ${book.pageCount}", style = MaterialTheme.typography.bodyLarge)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -81,13 +77,9 @@ fun BookDetailScreen(
         val hasStock = book.avaiableCopies > 0
 
         Button(
-            onClick = {
-                showDatePickerDialog = true // Takvimi aç
-            },
+            onClick = { showDatePickerDialog = true },
             enabled = hasStock,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
+            modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
             Text(
                 text = if (hasStock) "ÖDÜNÇ AL" else "STOKTA YOK",
@@ -97,14 +89,16 @@ fun BookDetailScreen(
         }
 
         if (showDatePickerDialog) {
-            BorrowBookDatePickerDialog(
+            BorrowBookDateRangePickerDialog(
                 onDismiss = { showDatePickerDialog = false },
-                onConfirm = { selectedDateMillis ->
+                onConfirm = { startDateMillis, endDateMillis ->
                     showDatePickerDialog = false
 
                     bookViewModel.borrowBook(
                         bookId = book.id,
-                        returnDateMillis = selectedDateMillis,
+                        currentStock = book.avaiableCopies,
+                        startDateMillis = startDateMillis,
+                        returnDateMillis = endDateMillis,
                         onSuccess = { showSuccessDialog = true }
                     )
                 }
@@ -119,41 +113,76 @@ fun BookDetailScreen(
                 confirmButton = {
                     Button(onClick = {
                         showSuccessDialog = false
-                        onNavigateToBorrows() // Kiralamalar sayfasına yönlendirir
+                        onNavigateToBorrows()
                     }) {
                         Text("Kiralamalarım'a Git")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showSuccessDialog = false }) {
-                        Text("Kapat")
-                    }
+                    TextButton(onClick = { showSuccessDialog = false }) { Text("Kapat") }
                 }
             )
         }
     }
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BorrowBookDatePickerDialog(
+fun BorrowBookDateRangePickerDialog(
     onDismiss: () -> Unit,
-    onConfirm: (Long) -> Unit
+    onConfirm: (Long, Long) -> Unit
 ) {
-    val datePickerState = rememberDatePickerState(
+    val dateRangePickerState = rememberDateRangePickerState(
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return utcTimeMillis >= System.currentTimeMillis() - 86400000 // Dünü engeller
+                return utcTimeMillis >= System.currentTimeMillis() - 86400000 // Dünü engelle
             }
         }
     )
+
+    val startDate = dateRangePickerState.selectedStartDateMillis
+    val endDate = dateRangePickerState.selectedEndDateMillis
+
+    // 5 GÜN KURALI
+    var isButtonEnabled by remember { mutableStateOf(false) }
+    var infoText by remember { mutableStateOf("Lütfen kiralama aralığı seçin") }
+
+    LaunchedEffect(startDate, endDate) {
+        if (startDate != null && endDate != null) {
+            val diffMillis = endDate - startDate
+            val days = diffMillis / (1000 * 60 * 60 * 24)
+
+            when {
+                days > 4 -> { // 0 dahil 5 gün için fark maksimum 4 olmalı
+                    isButtonEnabled = false
+                    infoText = "Maksimum 5 gün seçebilirsiniz."
+                }
+                days == 0L -> {
+                    isButtonEnabled = false
+                    infoText = "Kiralama en az 1 gün olmalıdır."
+                }
+                else -> {
+                    isButtonEnabled = true
+                    infoText = "${days + 1} günlük kiralama seçildi."
+                }
+            }
+        } else {
+            isButtonEnabled = false
+            infoText = "Başlangıç ve Bitiş tarihi seçin"
+        }
+    }
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(
-                onClick = { datePickerState.selectedDateMillis?.let { onConfirm(it) } },
-                enabled = datePickerState.selectedDateMillis != null // Tarih seçilmeden onaylanamaz
+                onClick = {
+                    if (startDate != null && endDate != null) {
+                        onConfirm(startDate, endDate)
+                    }
+                },
+                enabled = isButtonEnabled
             ) {
                 Text("Onayla")
             }
@@ -162,6 +191,21 @@ fun BorrowBookDatePickerDialog(
             TextButton(onClick = onDismiss) { Text("İptal") }
         }
     ) {
-        DatePicker(state = datePickerState)
+        Column {
+            Text(
+                text = infoText,
+                color = if (!isButtonEnabled && startDate != null && endDate != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(16.dp)
+            )
+
+            DateRangePicker(
+                state = dateRangePickerState,
+                modifier = Modifier.weight(1f),
+                title = null,
+                headline = null,
+                showModeToggle = false
+            )
+        }
     }
 }

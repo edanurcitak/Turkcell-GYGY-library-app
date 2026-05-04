@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.turkcell.libraryapp.ui.screen.BookDetailScreen
+import com.turkcell.libraryapp.ui.screen.BorrowScreen
 import com.turkcell.libraryapp.ui.screen.HomeScreen
 import com.turkcell.libraryapp.ui.screen.LoginScreen
 import com.turkcell.libraryapp.ui.screen.RegisterScreen
@@ -65,26 +66,22 @@ fun NavGraph(navController: NavHostController = rememberNavController()) {
         }
 
         composable(
-            route = "book_detail/{bookId}",
+            route = Screen.BookDetail.route,
             arguments = listOf(navArgument("bookId") { type = NavType.StringType })
         ) { backStackEntry ->
 
-            val bookList = bookViewModel.books.collectAsState().value
+            val bookId = backStackEntry.arguments?.getString("bookId") ?: ""
 
-            val bookId = backStackEntry.arguments?.getString("bookId")
-
-            val selectedBook = bookList.find { it.id == bookId }
-
-            if (selectedBook != null) {
-                BookDetailScreen(
-                    book = selectedBook,
-                    bookViewModel = bookViewModel,
-                    onNavigateToBorrows = {
-                        // Daha sonra değiştireceğiz.
-                        println("Kiralamalarım sayfasına gidiliyor...")
-                    }
-                )
-            }
+            BookDetailScreen(
+                bookId = bookId,
+                bookViewModel = bookViewModel,
+                onNavigateToBorrows = {
+                    navController.navigate(Screen.Borrow.route)
+                }
+            )
+        }
+        composable(Screen.Borrow.route) {
+            BorrowScreen(bookViewModel = bookViewModel)
         }
     }
 }

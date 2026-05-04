@@ -20,10 +20,24 @@ data class Book (
 data class BorrowRequest (
     @SerialName("user_id") val userId: String,
     @SerialName("book_id") val bookId: String,
+    @SerialName("borrow_date") val borrowDate: String,
     @SerialName("return_date") val returnDate: String
 )
 
 @Serializable
 data class StockUpdate(
     @SerialName("available_copies") val avaiableCopies: Int
+)
+
+@Serializable
+data class BorrowRecordResponse(
+    @SerialName("book_id") val bookId: String,
+    @SerialName("borrow_date") val borrowDate: String,
+    @SerialName("return_date") val returnDate: String
+)
+
+data class BorrowedBookUiModel(
+    val book: Book,
+    val borrowDate: String,
+    val returnDate: String
 )
